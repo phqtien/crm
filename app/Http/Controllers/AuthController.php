@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
+use App\Models\UserRole;
 
 class AuthController extends Controller
 {
@@ -41,6 +42,11 @@ class AuthController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => bcrypt($request->password),
+        ]);
+
+        UserRole::create([
+            'user_id' => $user->id,
+            'role_id' => 2,
         ]);
 
         Auth::login($user);

@@ -4,6 +4,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\NewOrderController;
+use App\Http\Controllers\OrderController;
 
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 
@@ -30,4 +32,13 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/products/{id}', [ProductController::class, 'update']);
         Route::delete('/products/{id}', [ProductController::class, 'destroy']);
     });
+
+    Route::get('/orders', [OrderController::class, 'index']);
+    Route::delete('/orders/{id}', [OrderController::class, 'destroy']);
+    Route::get('/orders/newOrder', [OrderController::class, 'showCreateNewOrder']);
+    Route::get('/orders/newOrder/search_customer_by_phone', [OrderController::class, 'searchCustomerByPhone']);
+    Route::get('/orders/newOrder/search_product_by_name', [OrderController::class, 'searchProductByName']);
+    Route::post('/orders/newOrder', [OrderController::class, 'createNewOrder']);
+    Route::get('/orders/detail', [OrderController::class, 'getOrderDetail']);
+
 });

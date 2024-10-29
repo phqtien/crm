@@ -16,7 +16,8 @@
                     <a href="/home" class="btn btn-primary"><i class="bi bi-house-door-fill"></i></a>
                     <div class="d-flex flex-column">
                         <a href="/customers" class="mb-4 btn btn-primary"><i class="bi bi-file-earmark-person-fill"></i></a>
-                        <a href="/products" class="btn btn-primary"><i class="bi bi-box-fill"></i></a>
+                        <a href="/products" class="mb-4 btn btn-primary"><i class="bi bi-box-fill"></i></a>
+                        <a href="/orders" class="btn btn-primary"><i class="bi bi-cart-fill"></i></a>
                     </div>
                     <form action="/logout" method="POST">
                         @csrf
