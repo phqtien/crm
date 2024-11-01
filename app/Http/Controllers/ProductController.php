@@ -19,6 +19,11 @@ class ProductController extends Controller
             $products = Product::paginate(10);
         }
 
+        $products->getCollection()->transform(function ($product) {
+            $product->created_at = $product->created_at->setTimezone('Asia/Ho_Chi_Minh')->format('d-m-Y H:i:s'); // Định dạng ngày tháng
+            return $product;
+        });
+
         return view('products', compact('products'));
     }
 

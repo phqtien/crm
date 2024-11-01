@@ -11,8 +11,8 @@
         <form action='/orders' method="GET" class="row d-flex mt-3">
             <div class="col-2">
                 <select name="search_by" class="form-select" required>
-                    <option value="customer_id">Order Id</option>
-                    <option value="user_id">User Id</option>
+                    <option value="customer_name">Customer Name</option>
+                    <option value="user_name">User Name</option>
                     <option value="id">Order Id</option>
                 </select>
             </div>
@@ -31,37 +31,8 @@
         </form>
     </div>
 
-    <!-- Orders table -->
-    <table class="table table-bordered mt-3">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Order Name</th>
-                <th>User ID</th>
-                <th>Total Amount</th>
-                <th>Status</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach ($orders as $order)
-            <tr data-bs-toggle="modal" data-bs-target="#editOrderModal"
-                data-id="{{ $order->id }}"
-                data-customer-id="{{ $order->customer_id }}"
-                data-user-id="{{ $order->user_id }}"
-                data-total-amount="{{ $order->total_amount }}"
-                data-status="{{ $order->status }}">
-                <td>{{ $order->id }}</td>
-                <td>{{ $order->customer_id }}
-                <td>{{ $order->user_id }}</td>
-                <td>{{ $order->total_amount }}</td>
-                <td>{{ $order->status }}</td>
-            </tr>
-            @endforeach
-        </tbody>
-    </table>
-
     <!-- Custom pagination controls -->
-    <div class="d-flex justify-content-between">
+    <div class="d-flex justify-content-between mt-5">
         <div>
             <span>{{ $orders->count() }} / {{ $orders->total() }}</span>
         </div>
@@ -87,6 +58,38 @@
                 @endif
         </div>
     </div>
+
+    <!-- Orders table -->
+    <table class="table table-bordered mt-1">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Customer Name</th>
+                <th>User Name</th>
+                <th>Total Amount</th>
+                <th>Status</th>
+                <th>Created At</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach ($orders as $order)
+            <tr data-bs-toggle="modal" data-bs-target="#editOrderModal"
+                data-id="{{ $order->id }}"
+                data-customer-id="{{ $order->customer_id }}"
+                data-user-id="{{ $order->user_id }}"
+                data-total-amount="{{ $order->total_amount }}"
+                data-status="{{ $order->status }}"
+                data-created-at="{{ $order->created_at }}">
+                <td>{{ $order->id }}</td>
+                <td>{{ $order->customer_name }}
+                <td>{{ $order->user_name }}</td>
+                <td>{{ $order->total_amount }}</td>
+                <td>{{ $order->status }}</td>
+                <td>{{ $order->created_at }}</td>
+            </tr>
+            @endforeach
+        </tbody>
+    </table>
 </div>
 
 <!-- Modal -->
@@ -105,18 +108,35 @@
                 <p><strong>Customer Email:</strong> <span id="modal-customer-email"></span></p>
                 <p><strong>Total Amount:</strong> <span id="modal-total-amount"></span></p>
                 <p><strong>Status:</strong> <span id="modal-status"></span></p>
-                <hr>
+                <p><strong>Created At:</strong> <span id="modal-created-at"></span></p>
+
                 <h5>Order Items:</h5>
-                <ul id="modal-order-items"></ul> <!-- List product -->
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Product Name</th>
+                            <th>Quantity</th>
+                            <th>Price</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="modal-order-items">
+                        <!-- Product rows will be appended here -->
+                    </tbody>
+                </table>
             </div>
 
             <div class="modal-footer justify-content-between">
                 <button type="button" class="btn btn-danger" id="deleteOrderButton" data-bs-toggle="modal" data-bs-target="#deleteOrderModal">Delete</button>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <div class="d-flex">
+                    <button type="button" class="btn btn-secondary me-3" data-bs-dismiss="modal">Close</button>
+                    <a id="generatePdfLink" href="#" class="btn btn-primary">PDF</a>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
 
 <!-- Modal for Delete Confirmation -->
 <div class="modal fade" id="deleteOrderModal" tabindex="-1" aria-labelledby="deleteOrderModalLabel" aria-hidden="true">
@@ -142,11 +162,21 @@
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-GB') + ' ' + date.toLocaleTimeString('en-GB', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
         const orderRows = document.querySelectorAll('tbody tr');
 
         orderRows.forEach(row => {
-            row.addEventListener('click', function () {
+            row.addEventListener('click', function() {
                 const orderId = this.getAttribute('data-id');
 
                 axios.get(`/orders/detail?id=${orderId}`)
@@ -160,18 +190,26 @@
                         document.getElementById('modal-customer-email').textContent = data.customer.email;
                         document.getElementById('modal-total-amount').textContent = data.order.total_amount;
                         document.getElementById('modal-status').textContent = data.order.status;
-
-                        const orderItemsList = document.getElementById('modal-order-items');
-                        orderItemsList.innerHTML = '';
+                        document.getElementById('modal-status').textContent = data.order.status;
+                        document.getElementById('modal-created-at').textContent = formatDate(new Date(data.order.created_at));
+                        const orderItemsTableBody = document.getElementById('modal-order-items');
+                        orderItemsTableBody.innerHTML = '';
 
                         data.order_items.forEach(item => {
-                            const listItem = document.createElement('li');
-                            listItem.textContent = `Product ID: ${item.product_id}, Quantity: ${item.quantity}, Unit Price: ${item.unit_price}`; // Thay đổi trường theo cấu trúc dữ liệu của bạn
-                            orderItemsList.appendChild(listItem);
+                            const row = document.createElement('tr');
+                            const totalPrice = (item.unit_price * item.quantity).toFixed(2);
+                            row.innerHTML = `
+                                <td>${item.product_name}</td>
+                                <td>${item.quantity}</td>
+                                <td>${item.unit_price}</td>
+                                <td>${totalPrice}</td>
+                            `;
+                            orderItemsTableBody.appendChild(row);
                         });
 
-                        // Update action of delete form
+
                         document.getElementById('deleteOrderForm').action = `/orders/${orderId}`;
+                        document.getElementById('generatePdfLink').href = `/orders/pdf?id=${orderId}`;
                     })
                     .catch(error => {
                         console.error('There was a problem with the fetch operation:', error);
@@ -180,7 +218,5 @@
         });
     });
 </script>
-
-
 
 @endsection

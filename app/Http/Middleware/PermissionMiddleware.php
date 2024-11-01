@@ -14,21 +14,17 @@ class PermissionMiddleware
     {
         $user = Auth::user();
 
-        // Lấy role của user từ bảng user_roles
         $userRole = UserRole::where('user_id', $user->id)->first();
 
-        // Lấy tất cả permission của role đó
         $rolePermissions = Role::with('permissions')
-            ->find($userRole->role_id); // Lấy role dựa trên role_id
+            ->find($userRole->role_id);
 
-        $userPermissions = $rolePermissions->permissions->pluck('name')->toArray(); // Lấy tên của các permission
+        $userPermissions = $rolePermissions->permissions->pluck('name')->toArray();
 
-        // Kiểm tra nếu user có một trong những quyền cần thiết
         if (array_intersect($userPermissions, $permissions)) {
-            return $next($request); // Cho phép truy cập nếu có quyền phù hợp
+            return $next($request);
         }
 
-        // Nếu không có quyền truy cập, chuyển hướng về trang chính với thông báo lỗi
-        return redirect('/login')->with('error', 'Bạn không có quyền truy cập.');
+        return redirect('/home')->with('error', "You don't have permission to access!");
     }
 }

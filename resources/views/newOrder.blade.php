@@ -6,7 +6,7 @@
 <div class="container p-3">
     <h2>Create New Order</h2>
 
-    <form id="search-form">
+    <form id="search-form" onsubmit="return false;">
         <div class="mb-3">
             <label for="phone" class="form-label">Search customer by phone</label>
             <input type="text" class="form-control" id="phone" name="phone" placeholder="Enter customer phone" required>
@@ -33,11 +33,11 @@
                 <tr>
                     <td class="align-content-center">1</td>
                     <td>
-                        <input type="text" class="form-control" placeholder="Enter product name" onkeyup="fetchProductDetails(this)">
+                        <input type="text" class="form-control" placeholder="Enter product name" onkeyup="debounceFetchProductDetails(this)">
                     </td>
                     <td class="align-content-center product-price"></td>
                     <td>
-                        <input type="number" class="w-25 form-control" min="1" oninput="calculateTotal(this)">
+                        <input type="number" id="number" class="w-50 form-control" min="0" oninput="calculateTotal(this)">
                     </td>
                     <td class="align-content-center product-total"></td>
                 </tr>
@@ -66,6 +66,18 @@
             .catch(handleError);
     }
 
+    function debounce(func, delay) {
+        let timer;
+        return function(...args) {
+            clearTimeout(timer);
+            timer = setTimeout(() => {
+                func.apply(this, args);
+            }, delay);
+        };
+    }
+
+    const debounceFetchProductDetails = debounce(fetchProductDetails, 500);
+
     function fetchProductDetails(input) {
         const productName = input.value;
         const row = input.closest('tr');
@@ -73,11 +85,21 @@
         axios.get(`/orders/newOrder/search_product_by_name?name=${productName}`)
             .then(response => {
                 const product = response.data.product;
-                row.querySelector('.product-price').innerText = product ? product.price : '';
+                const priceCell = row.querySelector('.product-price');
+                const quantityInput = row.querySelector('input[type="number"]');
+
+                if (product) {
+                    priceCell.innerText = product.price;
+                    quantityInput.setAttribute('max', product.quantity);
+                } else {
+                    priceCell.innerText = '';
+                    quantityInput.removeAttribute('max');
+                }
                 calculateTotal(input);
             })
             .catch(() => {
                 row.querySelector('.product-price').innerText = '';
+                input.removeAttribute('max');
                 calculateTotal(input);
             });
     }
@@ -85,9 +107,23 @@
     function calculateTotal(input) {
         const row = input.closest('tr');
         const price = parseFloat(row.querySelector('.product-price').innerText) || 0;
-        const quantity = parseInt(input.value) || 0;
-        const total = price * quantity;
+        let number = parseInt(input.value) || 0;
 
+        if (input.id === "number") {
+            const minQuantity = 0;
+            const maxQuantity = input.getAttribute('max') !== null ? parseInt(input.getAttribute('max')) : Infinity;
+
+            if (number > maxQuantity) {
+                number = maxQuantity;
+                input.value = maxQuantity;
+                alert(`Quantity of the product is ${maxQuantity}`);
+            } else if (number < minQuantity) {
+                number = minQuantity;
+                input.value = minQuantity;
+            }
+        }
+
+        const total = price * number;
         row.querySelector('.product-total').innerText = total;
         updateOrderTotal();
     }

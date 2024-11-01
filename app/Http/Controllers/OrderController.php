@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Models\Notification;
 use Illuminate\Support\Facades\Auth;
+use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\OrderItem;
 use App\Models\Customer;
 use App\Models\Product;
@@ -17,15 +19,30 @@ class OrderController extends Controller
         $search = $request->input('search');
         $searchBy = $request->input('search_by');
 
+        $query = Order::join('customers', 'orders.customer_id', '=', 'customers.id')
+            ->join('users', 'orders.user_id', '=', 'users.id')
+            ->select('orders.*', 'customers.name as customer_name', 'users.name as user_name');
+
         if ($search) {
-            $orders = Order::where($searchBy, 'LIKE', "%{$search}%")
-                ->paginate(10);
-        } else {
-            $orders = Order::paginate(10);
+            if ($searchBy === 'customer_name') {
+                $query->where('customers.name', 'LIKE', "%{$search}%");
+            } elseif ($searchBy === 'user_name') {
+                $query->where('users.name', 'LIKE', "%{$search}%");
+            } elseif ($searchBy === 'id') {
+                $query->where('orders.id', 'LIKE', "%{$search}%");
+            }
         }
+
+        $orders = $query->paginate(10);
+
+        $orders->getCollection()->transform(function ($order) {
+            $order->created_at = $order->created_at->setTimezone('Asia/Ho_Chi_Minh')->format('d-m-Y H:i:s'); // Định dạng ngày tháng
+            return $order;
+        });
 
         return view('/orders', compact('orders'));
     }
+
 
     public function destroy($id)
     {
@@ -87,16 +104,20 @@ class OrderController extends Controller
         foreach ($validatedData['products'] as $product) {
             $productModel = Product::where('name', $product['name'])->first();
 
-            if (!$productModel) {
-                return response()->json(['error' => 'Product not found: ' . $product['name']], 404);
-            }
-
             OrderItem::create([
                 'order_id' => $order->id,
                 'product_id' => $productModel->id,
                 'quantity' => $product['quantity'],
                 'unit_price' => $product['price'],
             ]);
+
+            $productModel->decrement('quantity', $product['quantity']);
+
+            if ($productModel->quantity < 10) {
+                Notification::create([
+                    'message' => "The product $productModel->name has less than 10 items left in stock!",
+                ]);
+            }
         }
 
         return response()->json(['message' => 'Order created successfully!', 'order_id' => $order->id], 201);
@@ -110,12 +131,43 @@ class OrderController extends Controller
 
         $customer = Customer::find($order->customer_id);
 
-        $orderItems = OrderItem::where('order_id', $orderId)->get();
+        $orderItems = OrderItem::join('products', 'order_items.product_id', '=', 'products.id')
+            ->select('order_items.*', 'products.name as product_name')
+            ->where('order_items.order_id', $orderId)
+            ->get();
 
         return response()->json([
             'order' => $order,
             'customer' => $customer,
             'order_items' => $orderItems,
         ]);
+    }
+
+    public function generateInvoice(Request $request)
+    {
+        $orderId = $request->input('id');
+
+        $order = Order::find($orderId);
+
+        if (!$order) {
+            return response()->json([$orderId, 'error' => 'Order not found'], 404);
+        }
+
+        $customer = Customer::find($order->customer_id);
+
+        if (!$customer) {
+            return response()->json(['error' => 'Customer not found'], 404);
+        }
+
+        $orderItems = OrderItem::join('products', 'order_items.product_id', '=', 'products.id')
+            ->select('order_items.*', 'products.name as product_name')
+            ->where('order_items.order_id', $orderId)
+            ->get();
+
+        $pdf = PDF::loadView('invoice', compact('order', 'customer', 'orderItems'));
+
+        return $pdf->download('invoice_' . $orderId . '.pdf');
+
+        // return view("/invoice", compact('order', 'customer', 'orderItems'));
     }
 }

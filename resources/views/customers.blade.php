@@ -32,38 +32,8 @@
 
     </div>
 
-
-    <!-- Customers table -->
-    <table class="table table-bordered mt-3">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Phone</th>
-                <th>Address</th>
-                <th>Email</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach ($customers as $customer)
-            <tr data-bs-toggle="modal" data-bs-target="#editCustomerModal"
-                data-id="{{ $customer->id }}"
-                data-name="{{ $customer->name }}"
-                data-phone="{{ $customer->phone }}"
-                data-address="{{ $customer->address }}"
-                data-email="{{ $customer->email }}">
-                <td>{{ $customer->id }}</td>
-                <td>{{ $customer->name }}</td>
-                <td>{{ $customer->phone }}</td>
-                <td>{{ $customer->address }}</td>
-                <td>{{ $customer->email }}</td>
-            </tr>
-            @endforeach
-        </tbody>
-    </table>
-
     <!-- Custom pagination controls -->
-    <div class="d-flex justify-content-between">
+    <div class="d-flex justify-content-between mt-5">
         <div>
             <span>{{ $customers->count() }} / {{ $customers->total() }}</span>
         </div>
@@ -89,6 +59,37 @@
                 @endif
         </div>
     </div>
+
+    <!-- Customers table -->
+    <table class="table table-bordered mt-1">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Phone</th>
+                <th>Address</th>
+                <th>Email</th>
+                <th>Created At</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach ($customers as $customer)
+            <tr data-bs-toggle="modal" data-bs-target="#editCustomerModal"
+                data-id="{{ $customer->id }}"
+                data-name="{{ $customer->name }}"
+                data-phone="{{ $customer->phone }}"
+                data-address="{{ $customer->address }}"
+                data-email="{{ $customer->email }}">
+                <td>{{ $customer->id }}</td>
+                <td>{{ $customer->name }}</td>
+                <td>{{ $customer->phone }}</td>
+                <td>{{ $customer->address }}</td>
+                <td>{{ $customer->email }}</td>
+                <td>{{ $customer->created_at }}</td>
+            </tr>
+            @endforeach
+        </tbody>
+    </table>
 </div>
 
 <!-- Modal for New Customer -->
@@ -203,13 +204,13 @@
                 const address = this.getAttribute('data-address');
                 const email = this.getAttribute('data-email');
 
-                document.getElementById('editCustomerForm').action = `/customers/${id}`; // Đường dẫn cho PUT request
+                document.getElementById('editCustomerForm').action = `/customers/${id}`;
                 document.getElementById('editName').value = name;
                 document.getElementById('editPhone').value = phone;
                 document.getElementById('editAddress').value = address;
                 document.getElementById('editEmail').value = email;
 
-                document.getElementById('deleteCustomerForm').action = `/customers/${id}`; // Đường dẫn cho DELETE request
+                document.getElementById('deleteCustomerForm').action = `/customers/${id}`;
             });
         });
     });

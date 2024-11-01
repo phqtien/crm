@@ -31,37 +31,8 @@
         </form>
     </div>
 
-    <!-- Products table -->
-    <table class="table table-bordered mt-3">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Price</th>
-                <th>Quantity</th>
-                <th>Description</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach ($products as $product)
-            <tr data-bs-toggle="modal" data-bs-target="#editProductModal"
-                data-id="{{ $product->id }}"
-                data-name="{{ $product->name }}"
-                data-price="{{ $product->price }}"
-                data-quantity="{{ $product->quantity }}"
-                data-description="{{ $product->description }}">
-                <td>{{ $product->id }}</td>
-                <td>{{ $product->name }}</td>
-                <td>{{ $product->price }}</td>
-                <td>{{ $product->quantity }}</td>
-                <td>{{ $product->description }}</td>
-            </tr>
-            @endforeach
-        </tbody>
-    </table>
-
     <!-- Custom pagination controls -->
-    <div class="d-flex justify-content-between">
+    <div class="d-flex justify-content-between mt-5">
         <div>
             <span>{{ $products->count() }} / {{ $products->total() }}</span>
         </div>
@@ -87,6 +58,37 @@
                 @endif
         </div>
     </div>
+
+    <!-- Products table -->
+    <table class="table table-bordered mt-1">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Price</th>
+                <th>Quantity</th>
+                <th>Description</th>
+                <th>Created At</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach ($products as $product)
+            <tr data-bs-toggle="modal" data-bs-target="#editProductModal"
+                data-id="{{ $product->id }}"
+                data-name="{{ $product->name }}"
+                data-price="{{ $product->price }}"
+                data-quantity="{{ $product->quantity }}"
+                data-description="{{ $product->description }}">
+                <td>{{ $product->id }}</td>
+                <td>{{ $product->name }}</td>
+                <td>{{ $product->price }}</td>
+                <td>{{ $product->quantity }}</td>
+                <td>{{ $product->description }}</td>
+                <td>{{ $product->created_at }}</td>
+            </tr>
+            @endforeach
+        </tbody>
+    </table>
 </div>
 
 <!-- Modal for New Product -->

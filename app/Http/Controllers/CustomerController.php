@@ -20,6 +20,11 @@ class CustomerController extends Controller
             $customers = Customer::paginate(10);
         }
 
+        $customers->getCollection()->transform(function ($customer) {
+            $customer->created_at = $customer->created_at->setTimezone('Asia/Ho_Chi_Minh')->format('d-m-Y H:i:s');
+            return $customer;
+        });
+
         return view('/customers', compact('customers'));
     }
 

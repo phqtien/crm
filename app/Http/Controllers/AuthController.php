@@ -25,11 +25,6 @@ class AuthController extends Controller
         return view('/login');
     }
 
-    public function showHome()
-    {
-        return view('/home');
-    }
-
     public function register(Request $request)
     {
         $request->validate([
