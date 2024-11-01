@@ -2,6 +2,15 @@
 
 @section('content')
 <div class="container p-3">
+    @if ($errors->any())
+    <div class="alert alert-danger">
+        <ul>
+            @foreach ($errors->all() as $error)
+            <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+    @endif
     <div class="d-flex justify-content-between align-items-center">
         <h3>Orders</h3>
         <a href="/orders/newOrder" class="btn btn-primary">New</a>

@@ -59,7 +59,7 @@ class OrderController extends Controller
     public function searchCustomerByPhone(Request $request)
     {
         $phone = $request->input('phone');
-        $customer = Customer::where('phone', $phone)->first();
+        $customer = Customer::where('phone', 'LIKE', "%{$phone}%")->first();
 
         if (!$customer) {
             return response()->json(['error' => 'Customer not found'], 404);
