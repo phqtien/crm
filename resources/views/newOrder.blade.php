@@ -139,7 +139,7 @@
                 </td>
                 <td class="align-content-center product-price"></td>
                 <td>
-                    <input type="number" class="w-25 form-control" min="1" oninput="calculateTotal(this)">
+                    <input type="number" id="number" class="w-50 form-control" min="1" oninput="calculateTotal(this)">
                 </td>
                 <td class="align-content-center product-total"></td>
             </tr>

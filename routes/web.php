@@ -27,6 +27,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::middleware('permission:customers')->group(function () {
         Route::get('/customers', [CustomerController::class, 'index']);
+        Route::get('/customers/fetch', [CustomerController::class, 'fetchCustomers']);
         Route::post('/customers', [CustomerController::class, 'store']);
         Route::put('/customers/{id}', [CustomerController::class, 'update']);
         Route::delete('/customers/{id}', [CustomerController::class, 'destroy']);
@@ -34,6 +35,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::middleware('permission:products')->group(function () {
         Route::get('/products', [ProductController::class, 'index']);
+        Route::get('/products/fetch', [ProductController::class, 'fetchProducts']);
         Route::post('/products', [ProductController::class, 'store']);
         Route::put('/products/{id}', [ProductController::class, 'update']);
         Route::delete('/products/{id}', [ProductController::class, 'destroy']);
@@ -41,6 +43,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::middleware('permission:orders')->group(function () {
         Route::get('/orders', [OrderController::class, 'index']);
+        Route::get('/orders/fetch', [OrderController::class, 'fetchOrders']);
         Route::delete('/orders/{id}', [OrderController::class, 'destroy']);
         Route::get('/orders/newOrder', [OrderController::class, 'showCreateNewOrder']);
         Route::get('/orders/newOrder/search_customer_by_phone', [OrderController::class, 'searchCustomerByPhone']);

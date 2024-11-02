@@ -7,24 +7,21 @@ use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
-        $search = $request->input('search');
-        $searchBy = $request->input('search_by');
+        return view('/products');
+    }
 
-        if ($search) {
-            $products = Product::where($searchBy, 'LIKE', "%{$search}%")
-                ->paginate(10);
-        } else {
-            $products = Product::paginate(10);
-        }
+    public function fetchProducts()
+    {
+        $products = Product::all();
 
-        $products->getCollection()->transform(function ($product) {
-            $product->created_at = $product->created_at->setTimezone('Asia/Ho_Chi_Minh')->format('d-m-Y H:i:s'); // Định dạng ngày tháng
+        $products->transform(function ($product) {
+            $product->created_at = $product->created_at->setTimezone('Asia/Ho_Chi_Minh')->format('d-m-Y H:i:s');
             return $product;
         });
 
-        return view('products', compact('products'));
+        return response()->json(['products' => $products]);
     }
 
     public function store(Request $request)

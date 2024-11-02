@@ -14,35 +14,25 @@ use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
-        $search = $request->input('search');
-        $searchBy = $request->input('search_by');
+        return view('/orders');
+    }
 
-        $query = Order::join('customers', 'orders.customer_id', '=', 'customers.id')
+    public function fetchOrders()
+    {
+        $orders = Order::join('customers', 'orders.customer_id', '=', 'customers.id')
             ->join('users', 'orders.user_id', '=', 'users.id')
-            ->select('orders.*', 'customers.name as customer_name', 'users.name as user_name');
+            ->select('orders.*', 'customers.name as customer_name', 'users.name as user_name')
+            ->get();
 
-        if ($search) {
-            if ($searchBy === 'customer_name') {
-                $query->where('customers.name', 'LIKE', "%{$search}%");
-            } elseif ($searchBy === 'user_name') {
-                $query->where('users.name', 'LIKE', "%{$search}%");
-            } elseif ($searchBy === 'id') {
-                $query->where('orders.id', 'LIKE', "%{$search}%");
-            }
-        }
-
-        $orders = $query->paginate(10);
-
-        $orders->getCollection()->transform(function ($order) {
-            $order->created_at = $order->created_at->setTimezone('Asia/Ho_Chi_Minh')->format('d-m-Y H:i:s'); // Định dạng ngày tháng
+        $orders->transform(function ($order) {
+            $order->created_at = $order->created_at->setTimezone('Asia/Ho_Chi_Minh')->format('d-m-Y H:i:s');
             return $order;
         });
 
-        return view('/orders', compact('orders'));
+        return response()->json(['orders' => $orders]);
     }
-
 
     public function destroy($id)
     {

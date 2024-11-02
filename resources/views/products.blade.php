@@ -11,66 +11,16 @@
         </ul>
     </div>
     @endif
-    <div class="d-flex justify-content-between align-items-center">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
         <h3>Products</h3>
         <!-- New Product Button -->
         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newProductModal">New</button>
     </div>
 
-    <div>
-        <form action='/products' method="GET" class="row d-flex mt-3">
-            <div class="col-2">
-                <select name="search_by" class="form-select" required>
-                    <option value="name">Name</option>
-                    <option value="quantity">Quantity</option>
-                </select>
-            </div>
-            <div class="col-5">
-                <input type="text" name="search" class="form-control" placeholder="Search..." required value="{{ request('search') }}">
-            </div>
-            <div class="col-1">
-                <button type="submit" class="btn btn-success">Search</button>
-            </div>
-
-            @if(request('search'))
-            <div class="col-1">
-                <a href="/products" class="btn btn-danger">Cancel</a>
-            </div>
-            @endif
-        </form>
-    </div>
-
-    <!-- Custom pagination controls -->
-    <div class="d-flex justify-content-between mt-5">
-        <div>
-            <span>{{ $products->count() }} / {{ $products->total() }}</span>
-        </div>
-        <div>
-            @if ($products->onFirstPage())
-            <span>Start</span>
-            @else
-            <a href="{{ $products->previousPageUrl() }}">Previous</a>
-            @endif
-
-            @for ($i = 1; $i <= $products->lastPage(); $i++)
-                @if ($i == $products->currentPage())
-                <strong>{{ $i }}</strong>
-                @else
-                <a href="{{ $products->url($i) }}">{{ $i }}</a>
-                @endif
-                @endfor
-
-                @if ($products->hasMorePages())
-                <a href="{{ $products->nextPageUrl() }}">Next</a>
-                @else
-                <span>End</span>
-                @endif
-        </div>
-    </div>
-
     <!-- Products table -->
-    <table class="table table-bordered mt-1">
-        <thead>
+    <table class="table table-striped table-bordered mt-1" id="productsTable">
+        <thead class="table-light">
             <tr>
                 <th>ID</th>
                 <th>Name</th>
@@ -78,24 +28,11 @@
                 <th>Quantity</th>
                 <th>Description</th>
                 <th>Created At</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
-            @foreach ($products as $product)
-            <tr data-bs-toggle="modal" data-bs-target="#editProductModal"
-                data-id="{{ $product->id }}"
-                data-name="{{ $product->name }}"
-                data-price="{{ $product->price }}"
-                data-quantity="{{ $product->quantity }}"
-                data-description="{{ $product->description }}">
-                <td>{{ $product->id }}</td>
-                <td>{{ $product->name }}</td>
-                <td>{{ $product->price }}</td>
-                <td>{{ $product->quantity }}</td>
-                <td>{{ $product->description }}</td>
-                <td>{{ $product->created_at }}</td>
-            </tr>
-            @endforeach
+            <!-- Data from DataTables -->
         </tbody>
     </table>
 </div>
@@ -202,26 +139,5 @@
     </div>
 </div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        document.querySelectorAll('tr[data-bs-toggle="modal"]').forEach(function(row) {
-            row.addEventListener('click', function() {
-                const id = this.getAttribute('data-id');
-                const name = this.getAttribute('data-name');
-                const price = this.getAttribute('data-price');
-                const quantity = this.getAttribute('data-quantity');
-                const description = this.getAttribute('data-description');
-
-                document.getElementById('editProductForm').action = `/products/${id}`; // Đường dẫn cho PUT request
-                document.getElementById('editName').value = name;
-                document.getElementById('editPrice').value = price;
-                document.getElementById('editQuantity').value = quantity;
-                document.getElementById('editDescription').value = description;
-
-                document.getElementById('deleteProductForm').action = `/products/${id}`; // Đường dẫn cho DELETE request
-            });
-        });
-    });
-</script>
-
+<script src="{{ asset('js/products.js') }}"></script>
 @endsection

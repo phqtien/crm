@@ -11,66 +11,14 @@
         </ul>
     </div>
     @endif
-    <div class="d-flex justify-content-between align-items-center">
+    <div class="d-flex justify-content-between align-items-center mb-3">
         <h3>Orders</h3>
         <a href="/orders/newOrder" class="btn btn-primary">New</a>
     </div>
 
-    <div>
-        <form action='/orders' method="GET" class="row d-flex mt-3">
-            <div class="col-2">
-                <select name="search_by" class="form-select" required>
-                    <option value="customer_name">Customer Name</option>
-                    <option value="user_name">User Name</option>
-                    <option value="id">Order Id</option>
-                </select>
-            </div>
-            <div class="col-5">
-                <input type="text" name="search" class="form-control" placeholder="Search..." required value="{{ request('search') }}">
-            </div>
-            <div class="col-1">
-                <button type="submit" class="btn btn-success">Search</button>
-            </div>
-
-            @if(request('search'))
-            <div class="col-1">
-                <a href="/orders" class="btn btn-danger">Cancel</a>
-            </div>
-            @endif
-        </form>
-    </div>
-
-    <!-- Custom pagination controls -->
-    <div class="d-flex justify-content-between mt-5">
-        <div>
-            <span>{{ $orders->count() }} / {{ $orders->total() }}</span>
-        </div>
-        <div>
-            @if ($orders->onFirstPage())
-            <span>Start</span>
-            @else
-            <a href="{{ $orders->previousPageUrl() }}">Previous</a>
-            @endif
-
-            @for ($i = 1; $i <= $orders->lastPage(); $i++)
-                @if ($i == $orders->currentPage())
-                <strong>{{ $i }}</strong>
-                @else
-                <a href="{{ $orders->url($i) }}">{{ $i }}</a>
-                @endif
-                @endfor
-
-                @if ($orders->hasMorePages())
-                <a href="{{ $orders->nextPageUrl() }}">Next</a>
-                @else
-                <span>End</span>
-                @endif
-        </div>
-    </div>
-
     <!-- Orders table -->
-    <table class="table table-bordered mt-1">
-        <thead>
+    <table class="table table-striped table-bordered mt-1" id="ordersTable">
+        <thead class="table-light">
             <tr>
                 <th>ID</th>
                 <th>Customer Name</th>
@@ -78,46 +26,32 @@
                 <th>Total Amount</th>
                 <th>Status</th>
                 <th>Created At</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
-            @foreach ($orders as $order)
-            <tr data-bs-toggle="modal" data-bs-target="#editOrderModal"
-                data-id="{{ $order->id }}"
-                data-customer-id="{{ $order->customer_id }}"
-                data-user-id="{{ $order->user_id }}"
-                data-total-amount="{{ $order->total_amount }}"
-                data-status="{{ $order->status }}"
-                data-created-at="{{ $order->created_at }}">
-                <td>{{ $order->id }}</td>
-                <td>{{ $order->customer_name }}
-                <td>{{ $order->user_name }}</td>
-                <td>{{ $order->total_amount }}</td>
-                <td>{{ $order->status }}</td>
-                <td>{{ $order->created_at }}</td>
-            </tr>
-            @endforeach
+            <!-- Data from DataTables -->
         </tbody>
     </table>
 </div>
 
 <!-- Modal -->
-<div class="modal fade" id="editOrderModal" tabindex="-1" aria-labelledby="editOrderModalLabel" aria-hidden="true">
+<div class="modal fade" id="orderModal" tabindex="-1" aria-labelledby="orderModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="editOrderModalLabel">Order Details</h5>
+                <h5 class="modal-title" id="orderModalLabel">Order Details</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <p><strong>Order ID:</strong> <span id="modal-order-id"></span></p>
-                <p><strong>Customer Name:</strong> <span id="modal-customer-name"></span></p>
-                <p><strong>Customer Phone:</strong> <span id="modal-customer-phone"></span></p>
-                <p><strong>Customer Address:</strong> <span id="modal-customer-address"></span></p>
-                <p><strong>Customer Email:</strong> <span id="modal-customer-email"></span></p>
-                <p><strong>Total Amount:</strong> <span id="modal-total-amount"></span></p>
-                <p><strong>Status:</strong> <span id="modal-status"></span></p>
-                <p><strong>Created At:</strong> <span id="modal-created-at"></span></p>
+                <p><strong>Order ID:</strong> <span id="orderId"></span></p>
+                <p><strong>Customer Name:</strong> <span id="customerName"></span></p>
+                <p><strong>Customer Phone:</strong> <span id="customerPhone"></span></p>
+                <p><strong>Customer Address:</strong> <span id="customerAddress"></span></p>
+                <p><strong>Customer Email:</strong> <span id="customerEmail"></span></p>
+                <p><strong>Total Amount:</strong> <span id="totalAmount"></span></p>
+                <p><strong>Status:</strong> <span id="status"></span></p>
+                <p><strong>Created At:</strong> <span id="createdAt"></span></p>
 
                 <h5>Order Items:</h5>
                 <table class="table table-bordered">
@@ -129,7 +63,7 @@
                             <th>Total</th>
                         </tr>
                     </thead>
-                    <tbody id="modal-order-items">
+                    <tbody id="orderItems">
                         <!-- Product rows will be appended here -->
                     </tbody>
                 </table>
@@ -145,7 +79,6 @@
         </div>
     </div>
 </div>
-
 
 <!-- Modal for Delete Confirmation -->
 <div class="modal fade" id="deleteOrderModal" tabindex="-1" aria-labelledby="deleteOrderModalLabel" aria-hidden="true">
@@ -170,62 +103,6 @@
     </div>
 </div>
 
-<script>
-    function formatDate(dateString) {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('en-GB') + ' ' + date.toLocaleTimeString('en-GB', {
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: false
-        });
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        const orderRows = document.querySelectorAll('tbody tr');
-
-        orderRows.forEach(row => {
-            row.addEventListener('click', function() {
-                const orderId = this.getAttribute('data-id');
-
-                axios.get(`/orders/detail?id=${orderId}`)
-                    .then(response => {
-                        const data = response.data;
-
-                        document.getElementById('modal-order-id').textContent = data.order.id;
-                        document.getElementById('modal-customer-name').textContent = data.customer.name;
-                        document.getElementById('modal-customer-phone').textContent = data.customer.phone;
-                        document.getElementById('modal-customer-address').textContent = data.customer.address;
-                        document.getElementById('modal-customer-email').textContent = data.customer.email;
-                        document.getElementById('modal-total-amount').textContent = data.order.total_amount;
-                        document.getElementById('modal-status').textContent = data.order.status;
-                        document.getElementById('modal-status').textContent = data.order.status;
-                        document.getElementById('modal-created-at').textContent = formatDate(new Date(data.order.created_at));
-                        const orderItemsTableBody = document.getElementById('modal-order-items');
-                        orderItemsTableBody.innerHTML = '';
-
-                        data.order_items.forEach(item => {
-                            const row = document.createElement('tr');
-                            const totalPrice = (item.unit_price * item.quantity).toFixed(2);
-                            row.innerHTML = `
-                                <td>${item.product_name}</td>
-                                <td>${item.quantity}</td>
-                                <td>${item.unit_price}</td>
-                                <td>${totalPrice}</td>
-                            `;
-                            orderItemsTableBody.appendChild(row);
-                        });
-
-
-                        document.getElementById('deleteOrderForm').action = `/orders/${orderId}`;
-                        document.getElementById('generatePdfLink').href = `/orders/pdf?id=${orderId}`;
-                    })
-                    .catch(error => {
-                        console.error('There was a problem with the fetch operation:', error);
-                    });
-            });
-        });
-    });
-</script>
+<script src="{{ asset('js/orders.js') }}"></script>
 
 @endsection

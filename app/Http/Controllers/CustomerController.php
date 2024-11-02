@@ -8,24 +8,21 @@ use Illuminate\Http\Request;
 
 class CustomerController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
-        $search = $request->input('search');
-        $searchBy = $request->input('search_by');
+        return view('/customers');
+    }
 
-        if ($search) {
-            $customers = Customer::where($searchBy, 'LIKE', "%{$search}%")
-                ->paginate(10);
-        } else {
-            $customers = Customer::paginate(10);
-        }
+    public function fetchCustomers(Request $request)
+    {
+        $customers = Customer::all();
 
-        $customers->getCollection()->transform(function ($customer) {
+        $customers->transform(function ($customer) {
             $customer->created_at = $customer->created_at->setTimezone('Asia/Ho_Chi_Minh')->format('d-m-Y H:i:s');
             return $customer;
         });
 
-        return view('/customers', compact('customers'));
+        return response()->json(['customers' => $customers]);
     }
 
     public function store(Request $request)
