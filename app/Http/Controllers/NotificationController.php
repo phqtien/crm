@@ -9,14 +9,19 @@ class NotificationController extends Controller
 {
     public function index()
     {
-        $notifications = Notification::paginate(10);
+        return view('/notifications');
+    }
 
-        $notifications->getCollection()->transform(function ($notifications) {
-            $notifications->created_at = $notifications->created_at->setTimezone('Asia/Ho_Chi_Minh')->format('d-m-Y H:i:s');
-            return $notifications;
+    public function fetchNotifications()
+    {
+        $notifications = Notification::all();
+
+        $notifications->transform(function ($notification) {
+            $notification->created_at = $notification->created_at->setTimezone('Asia/Ho_Chi_Minh')->format('d-m-Y H:i:s');
+            return $notification;
         });
 
-        return view('/notifications', compact('notifications'));
+        return response()->json(['notifications' => $notifications]);
     }
 
     public function destroy($id)

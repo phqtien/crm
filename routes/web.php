@@ -20,7 +20,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/home', [HomeController::class, 'index']);
     Route::get('/statistify', [HomeController::class, 'statistify']);
     Route::post('/logout', [AuthController::class, 'logout']);
+
     Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::get('/notifications/fetch', [NotificationController::class, 'fetchNotifications']);
     Route::delete('/notifications/{id}', [NotificationController::class, 'destroy']);
 
 
