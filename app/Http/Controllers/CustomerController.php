@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Customer;
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Yajra\DataTables\DataTables;
 
 class CustomerController extends Controller
 {
@@ -15,14 +15,21 @@ class CustomerController extends Controller
 
     public function fetchCustomers(Request $request)
     {
-        $customers = Customer::all();
-
-        $customers->transform(function ($customer) {
-            $customer->created_at = $customer->created_at->setTimezone('Asia/Ho_Chi_Minh')->format('d-m-Y H:i:s');
-            return $customer;
-        });
-
-        return response()->json(['customers' => $customers]);
+        if ($request->ajax()) {
+            $customers = Customer::select(['id', 'name', 'phone', 'address', 'email', 'created_at']);
+    
+            return DataTables::of($customers)
+                ->editColumn('created_at', function ($customer) {
+                    return $customer->created_at->setTimezone('Asia/Ho_Chi_Minh')->format('d-m-Y H:i:s');
+                })
+                ->addColumn('actions', function () {
+                    return '<button class="btn btn-warning editBtn" data-bs-toggle="modal" data-bs-target="#editCustomerModal"><i class="bi bi-pencil-fill"></i></button>';
+                })
+                ->rawColumns(['actions'])
+                ->make(true);
+        }
+        
+        return abort(404);
     }
 
     public function store(Request $request)
@@ -34,9 +41,12 @@ class CustomerController extends Controller
             'email' => 'nullable|email|max:255',
         ]);
 
-        Customer::create($request->only(['name', 'phone', 'address', 'email']));
+        $customer = Customer::create($request->only(['name', 'phone', 'address', 'email']));
 
-        return redirect('/customers');
+        return response()->json([
+            'message' => 'Customer created successfully.',
+            'customer' => $customer
+        ], 201);
     }
 
     public function update(Request $request, $id)
@@ -51,13 +61,19 @@ class CustomerController extends Controller
         $customer = Customer::findOrFail($id);
         $customer->update($validatedData);
 
-        return redirect('/customers');
+        return response()->json([
+            'message' => 'Customer updated successfully.',
+            'customer' => $customer
+        ], 200);
     }
 
     public function destroy($id)
     {
         $customer = Customer::findOrFail($id);
         $customer->delete();
-        return redirect('/customers');
+
+        return response()->json([
+            'message' => 'Customer deleted successfully.'
+        ], 200);
     }
 }

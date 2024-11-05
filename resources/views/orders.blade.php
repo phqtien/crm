@@ -2,18 +2,20 @@
 
 @section('content')
 <div class="container p-3">
-    @if ($errors->any())
-    <div class="alert alert-danger">
-        <ul>
-            @foreach ($errors->all() as $error)
-            <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
-    @endif
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h3>Orders</h3>
         <a href="/orders/newOrder" class="btn btn-primary">New</a>
+    </div>
+
+    <div class="mb-3 w-25">
+        <label for="statusFilter" class="form-label">Filter by Status</label>
+        <select id="statusFilter" class="form-select">
+            <option value="">All</option>
+            <option value="new">New</option>
+            <option value="in_progress">In Progress</option>
+            <option value="completed">Completed</option>
+            <option value="canceled">Canceled</option>
+        </select>
     </div>
 
     <!-- Orders table -->
@@ -68,9 +70,8 @@
                     </tbody>
                 </table>
             </div>
-
             <div class="modal-footer justify-content-between">
-                <button type="button" class="btn btn-danger" id="deleteOrderButton" data-bs-toggle="modal" data-bs-target="#deleteOrderModal">Delete</button>
+                <button type="button" class="btn btn-danger" id="deleteOrderButton" data-bs-dismiss="modal">Delete</button>
                 <div class="d-flex">
                     <button type="button" class="btn btn-secondary me-3" data-bs-dismiss="modal">Close</button>
                     <a id="generatePdfLink" href="#" class="btn btn-primary">PDF</a>
@@ -81,24 +82,20 @@
 </div>
 
 <!-- Modal for Delete Confirmation -->
-<div class="modal fade" id="deleteOrderModal" tabindex="-1" aria-labelledby="deleteOrderModalLabel" aria-hidden="true">
+<div class="modal fade modal-second" id="deleteOrderModal" tabindex="-1" aria-labelledby="deleteOrderModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="deleteOrderModalLabel">Confirm Delete</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="deleteOrderForm" action="" method="POST">
-                @csrf
-                @method('DELETE')
-                <div class="modal-body">
-                    Are you sure you want to delete this order?
-                </div>
-                <div class="modal-footer justify-content-between">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger">Delete</button>
-                </div>
-            </form>
+            <div class="modal-body">
+                Are you sure you want to delete this order?
+            </div>
+            <div class="modal-footer justify-content-between">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-danger" id="confirmDeleteOrderBtn" data-bs-dismiss="modal">Delete</button>
+            </div>
         </div>
     </div>
 </div>

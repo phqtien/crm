@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use Yajra\DataTables\DataTables;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
@@ -12,16 +13,23 @@ class ProductController extends Controller
         return view('/products');
     }
 
-    public function fetchProducts()
+    public function fetchProducts(Request $request)
     {
-        $products = Product::all();
+        if ($request->ajax()) {
+            $products = Product::select(['id', 'name', 'price', 'quantity', 'description', 'created_at']);
 
-        $products->transform(function ($product) {
-            $product->created_at = $product->created_at->setTimezone('Asia/Ho_Chi_Minh')->format('d-m-Y H:i:s');
-            return $product;
-        });
+            return DataTables::of($products)
+                ->editColumn('created_at', function ($product) {
+                    return $product->created_at->setTimezone('Asia/Ho_Chi_Minh')->format('d-m-Y H:i:s');
+                })
+                ->addColumn('actions', function () {
+                    return '<button class="btn btn-warning editBtn" " data-bs-toggle="modal" data-bs-target="#editProductModal"><i class="bi bi-pencil-fill"></i></button>';
+                })
+                ->rawColumns(['actions'])
+                ->make(true);
+        }
 
-        return response()->json(['products' => $products]);
+        return abort(404);
     }
 
     public function store(Request $request)
@@ -35,7 +43,9 @@ class ProductController extends Controller
 
         Product::create($request->only(['name', 'price', 'quantity', 'description']));
 
-        return redirect('/products');
+        return response()->json([
+            'message' => 'Product created successfully.',
+        ], 201);
     }
 
     public function update(Request $request, $id)
@@ -50,7 +60,9 @@ class ProductController extends Controller
         $product = Product::findOrFail($id);
         $product->update($validatedData);
 
-        return redirect('/products');
+        return response()->json([
+            'message' => 'Product updated successfully.',
+        ], 200);
     }
 
     public function destroy($id)
@@ -58,6 +70,8 @@ class ProductController extends Controller
         $product = Product::findOrFail($id);
         $product->delete();
 
-        return redirect('/products');
+        return response()->json([
+            'message' => 'Product updated successfully.',
+        ], 200);
     }
 }

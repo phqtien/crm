@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Notification;
 use Illuminate\Http\Request;
+use Yajra\DataTables\DataTables;
 
 class NotificationController extends Controller
 {
@@ -12,16 +13,23 @@ class NotificationController extends Controller
         return view('/notifications');
     }
 
-    public function fetchNotifications()
+    public function fetchNotifications(Request $request)
     {
-        $notifications = Notification::all();
+        if ($request->ajax()) {
+            $notifications = Notification::select(['id', 'message', 'created_at']);
 
-        $notifications->transform(function ($notification) {
-            $notification->created_at = $notification->created_at->setTimezone('Asia/Ho_Chi_Minh')->format('d-m-Y H:i:s');
-            return $notification;
-        });
+            return DataTables::of($notifications)
+                ->editColumn('created_at', function ($notification) {
+                    return $notification->created_at->setTimezone('Asia/Ho_Chi_Minh')->format('d-m-Y H:i:s');
+                })
+                ->addColumn('actions', function () {
+                    return '<button class="btn btn-warning deleteBtn" " data-bs-toggle="modal" data-bs-target="#deleteNotificationModal"><i class="bi bi-x-circle"></i></button>';
+                })
+                ->rawColumns(['actions'])
+                ->make(true);
+        }
 
-        return response()->json(['notifications' => $notifications]);
+        return abort(404);
     }
 
     public function destroy($id)
@@ -29,6 +37,8 @@ class NotificationController extends Controller
         $notification = Notification::findOrFail($id);
         $notification->delete();
 
-        return redirect('/notifications');
+        return response()->json([
+            'message' => 'Notification updated successfully.',
+        ], 200);
     }
 }

@@ -11,6 +11,7 @@ use App\Models\Customer;
 use App\Models\Product;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Yajra\DataTables\DataTables;
 
 class OrderController extends Controller
 {
@@ -19,26 +20,55 @@ class OrderController extends Controller
         return view('/orders');
     }
 
-    public function fetchOrders()
+    public function fetchOrders(Request $request)
     {
-        $orders = Order::join('customers', 'orders.customer_id', '=', 'customers.id')
-            ->join('users', 'orders.user_id', '=', 'users.id')
-            ->select('orders.*', 'customers.name as customer_name', 'users.name as user_name')
-            ->get();
+        if ($request->ajax()) {
+            $orders = Order::join('customers', 'orders.customer_id', '=', 'customers.id')
+                ->join('users', 'orders.user_id', '=', 'users.id')
+                ->select([
+                    'orders.id',
+                    'customers.name as customer_name',
+                    'users.name as user_name',
+                    'orders.total_amount',
+                    'orders.status',
+                    'orders.created_at'
+                ]);
 
-        $orders->transform(function ($order) {
-            $order->created_at = $order->created_at->setTimezone('Asia/Ho_Chi_Minh')->format('d-m-Y H:i:s');
-            return $order;
-        });
+            if ($request->has('status') && $request->status != '') {
+                $orders->where('orders.status', $request->status);
+            }
 
-        return response()->json(['orders' => $orders]);
+            return DataTables::of($orders)
+                ->filterColumn('customer_name', function ($query, $keyword) {
+                    $query->where('customers.name', 'like', "%{$keyword}%");
+                })
+                ->filterColumn('user_name', function ($query, $keyword) {
+                    $query->where('users.name', 'like', "%{$keyword}%");
+                })
+                ->filterColumn('created_at', function ($query, $keyword) {
+                    $query->where('orders.created_at', 'like', "%{$keyword}%");
+                })
+                ->editColumn('created_at', function ($order) {
+                    return $order->created_at->setTimezone('Asia/Ho_Chi_Minh')->format('d-m-Y H:i:s');
+                })
+                ->addColumn('actions', function () {
+                    return '<button class="btn btn-warning editBtn" " data-bs-toggle="modal" data-bs-target="#orderModal"><i class="bi bi-pencil-fill"></i></button>';
+                })
+                ->rawColumns(['actions'])
+                ->make(true);
+        }
+
+        return abort(404);
     }
 
     public function destroy($id)
     {
         $order = Order::findOrFail($id);
         $order->delete();
-        return redirect('/orders');
+        
+        return response()->json([
+            'message' => 'Order deleted successfully.'
+        ], 200);
     }
 
     public function showCreateNewOrder()

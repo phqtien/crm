@@ -1,31 +1,16 @@
-// document.addEventListener('DOMContentLoaded', function () {
-//     document.querySelectorAll('tr[data-bs-toggle="modal"]').forEach(function (row) {
-//         row.addEventListener('click', function () {
-//             const id = this.getAttribute('data-id');
-//             document.getElementById('deleteNotificationForm').action = `/notifications/${id}`;
-//         });
-//     });
-// });
-
 document.addEventListener('DOMContentLoaded', function () {
     var table = new DataTable('#notificationsTable', {
+        processing: true,
+        serverSide: true,
         ajax: {
             url: '/notifications/fetch',
-            dataSrc: 'notifications'
+            type: 'GET',
         },
         columns: [
             { data: 'id' },
             { data: 'message' },
-            {
-                data: 'created_at',
-                render: function (data) {
-                    return new Date(data).toLocaleString();
-                }
-            },
-            {
-                data: null,
-                defaultContent: '<button class="btn btn-warning deleteBtn" data-bs-toggle="modal" data-bs-target="#deleteNotificationModal"><i class="bi bi-x-circle"></i></button>'
-            }
+            { data: 'created_at' },
+            { data: 'actions', orderable: false, searchable: false }
         ],
         paging: true,
         lengthChange: true,
@@ -43,7 +28,23 @@ document.addEventListener('DOMContentLoaded', function () {
             var row = table.row(event.target.closest('tr'));
             var data = row.data();
 
-            document.getElementById('deleteNotificationForm').action = `/notifications/${data.id}`;
+            document.getElementById('confirmDeleteNotificationBtn').dataset.id = data.id;
         }
+    });
+
+    function refreshTable() {
+        table.draw();
+    }
+
+    // Delete Notification
+    document.getElementById('confirmDeleteNotificationBtn').addEventListener('click', function () {
+        let notificationId = document.getElementById('confirmDeleteNotificationBtn').dataset.id;
+
+        axios.delete(`/notifications/${notificationId}`)
+            .then(response => {
+                console.log(response);
+                refreshTable();
+            })
+            .catch(error => console.error(error));
     });
 });
