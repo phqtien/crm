@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var table = new DataTable('#ordersTable', {
         processing: true,
         serverSide: true,
+        fixedColumns: true,
         ajax: {
             url: '/orders/fetch',
             type: 'GET',
@@ -14,6 +15,7 @@ document.addEventListener('DOMContentLoaded', function () {
             { data: 'customer_name' },
             { data: 'user_name' },
             { data: 'total_amount' },
+            { data: 'total_product' },
             { data: 'status' },
             { data: 'created_at' },
             { data: 'actions', orderable: false, searchable: false }

@@ -26,6 +26,7 @@
                 <th>Customer Name</th>
                 <th>User Name</th>
                 <th>Total Amount</th>
+                <th>Total Product</th>
                 <th>Status</th>
                 <th>Created At</th>
                 <th>Actions</th>

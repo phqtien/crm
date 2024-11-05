@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\DB;
 use App\Models\Order;
 use App\Models\Notification;
 use Illuminate\Support\Facades\Auth;
@@ -25,14 +26,26 @@ class OrderController extends Controller
         if ($request->ajax()) {
             $orders = Order::join('customers', 'orders.customer_id', '=', 'customers.id')
                 ->join('users', 'orders.user_id', '=', 'users.id')
+                ->join('order_items', 'order_items.order_id', '=', 'orders.id')
                 ->select([
                     'orders.id',
                     'customers.name as customer_name',
                     'users.name as user_name',
                     'orders.total_amount',
                     'orders.status',
-                    'orders.created_at'
-                ]);
+                    'orders.created_at',
+                    DB::raw('SUM(order_items.quantity) as total_product'),
+                    //Number of product
+                    // DB::raw('(SELECT COUNT(*) FROM order_items WHERE order_items.order_id = orders.id) total_product'),
+                    //Number of quantity
+                    // DB::raw('(SELECT SUM(quantity) FROM order_items WHERE order_items.order_id = orders.id) total_product'),
+                ])
+                ->groupBy('orders.id', 'customers.name', 'users.name', 'orders.total_amount', 'orders.status', 'orders.created_at') // Nhóm theo id đơn hàng và các cột khác
+                //Number of product
+                // ->withCount('orderItems as total_product')
+                //Number of quantity
+                // ->withSum('orderItems as total_product', 'quantity')
+            ;
 
             if ($request->has('status') && $request->status != '') {
                 $orders->where('orders.status', $request->status);
@@ -65,7 +78,7 @@ class OrderController extends Controller
     {
         $order = Order::findOrFail($id);
         $order->delete();
-        
+
         return response()->json([
             'message' => 'Order deleted successfully.'
         ], 200);
